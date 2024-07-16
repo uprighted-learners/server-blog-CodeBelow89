@@ -65,9 +65,9 @@ router.post("/create", (req, res) => {
   try {
     let myObj = {
       id: db.length + 1,
-      title: req.body.category,
-      category: req.body.category,
-      price: req.body.price,
+      title: req.title.category,
+      author: req.author.body,
+      body: req.body.body,
     };
     db.push(myObj);
 
