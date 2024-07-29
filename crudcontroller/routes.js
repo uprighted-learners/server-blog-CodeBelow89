@@ -1,6 +1,25 @@
-const router = require("express").router();
+const router = require("express").Router();
 const db = require("../api-folder/ds.json");
-
+const fs = require("fs");
+const filePath = "./api-folder/ds.json";
+function readFile() {
+  try {
+    const data = fs.readFileSync(filePath);
+    console.log(data.toString());
+    return JSON.parse(data);
+  } catch (err) {
+    console.log(`Error trying to read a file: ${error.message}`);
+  }
+}
+function save(data) {
+  try {
+    fs.writeFileSync(filePath, JSON.stringify(data));
+    console.log(data.toString());
+  } catch (Error) {
+    console.log(`Error trying to read a file: ${error.message}`);
+  }
+}
+// Gets all item to appear at once!!
 router.get("/all", (req, res) => {
   try {
     res.status(200).json({
@@ -24,37 +43,40 @@ router.get("/one/:id", (req, res) => {
 
 router.delete("/delete/:id", (req, res) => {
   try {
-    let indexOfItem = db.findIndex((i) => i.post_id == req.params.id);
+    let deletePost = readFile();
+    let indexOfItem = deletePost.findIndex((i) => i.post_id == req.params.id);
+    deletePost.splice(indexOfItem, 1);
 
-    db.splice(indexOfItem, 1);
-
-    db.forEach((item, idx) => {
+    deletePost.forEach((item, idx) => {
       item.post_id = idx + 1;
     });
+    save(deletePost);
     res.status(200).json({
       Deleted: 1,
-      Results: db,
+      Results: deletePost,
     });
   } catch (err) {
     res.status(500).json(err);
   }
 });
-
+//Updating our IDs
 router.put("/update/:id", (req, res) => {
   try {
-    let indexOfItem = db.findIndex((i) => i.post_id == req.params.id);
-
+    let updatePost = readFile();
+    let indexOfItem = updatePost.findIndex((i) => i.post_id == req.params.id);
     console.log(indexOfItem);
-
-    db[indexOfItem] = {
-      id: db[indexOfItem].id,
-      title: req.title.name,
-      author: req.author.name,
+    // Which Item are we updating
+    updatePost[indexOfItem] = {
+      post_id: updatePost[indexOfItem].post_id,
+      title: req.body.title,
+      author: req.body.author,
       body: req.body.body,
     };
+    save(updatePost);
+    // Saves our update post
     res.status(200).json({
-      Updated: db[indexOfItem],
-      Results: db,
+      Updated: updatePost[indexOfItem],
+      Results: updatePost,
     });
   } catch (err) {
     res.status(500).json(err);
@@ -63,17 +85,22 @@ router.put("/update/:id", (req, res) => {
 
 router.post("/create", (req, res) => {
   try {
+    // Get the data from the database
+    let blogPost = readFile();
     let myObj = {
-      id: db.length + 1,
-      title: req.title.category,
-      author: req.author.body,
+      post_id: blogPost.length + 1,
+      title: req.body.title,
+      author: req.body.author,
       body: req.body.body,
     };
-    db.push(myObj);
+    blogPost.push(myObj);
+
+    save(blogPost);
+    // update our database with new edition
 
     res.status(200).json({
       Added: myObj,
-      Results: db,
+      Results: blogPost,
     });
   } catch (err) {
     res.status(500).json(err);
